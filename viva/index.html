@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1a1a21">
+<meta name="description" content="A small, foggy code-review popup. One question, a little clarity, then back to work.">
+<title>Viva · Clear the fog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600,100&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{color-scheme:dark;--bg:#23232e;--surface:#2a2a37;--surface-2:#333341;--surface-3:#414052;--line:#ffffff12;--line-2:#ffffff22;--text:#eeecf5;--soft:#bab7cc;--dim:#9793ad;--lav:#b3a8dd;--glow:#f1d5a3;--glow-bg:#f1d5a312;--glow-line:#f1d5a34d;--amber:#edbd76;--amber-bg:#edbd7610;--coral:#f0a294;--coral-bg:#f0a29412;--code-bg:#1d1d27;--ui:'Figtree',system-ui,sans-serif;--display:'Fraunces',Georgia,serif;--mono:'JetBrains Mono',monospace}
+*{box-sizing:border-box}body{margin:0;background:#e8e9ed;color:var(--text);font:14px/1.5 var(--ui);-webkit-font-smoothing:antialiased}button,textarea{font:inherit;color:inherit}button{cursor:pointer;border:0;background:none;padding:0}button:disabled{cursor:default;opacity:.5}button,a,textarea{-webkit-tap-highlight-color:transparent}a{color:inherit}button:focus-visible,a:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--glow);outline-offset:4px}h1,h2,p{margin:0}h1,h2{font-family:var(--display);font-weight:500;line-height:1.25}h1{font-size:25px;letter-spacing:-.02em}h2{font-size:22px}.soft{color:var(--soft)}.dim{color:var(--dim)}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}[hidden]{display:none!important}.i{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}.i.sm{width:14px;height:14px}.mono,code{font-family:var(--mono);font-size:11px}
+/* The page is only a neutral host for the floating widget. */
+.preview-label{position:fixed;top:25px;left:30px;display:flex;align-items:center;gap:10px;color:#6e6e7c;font-size:12px}.preview-label b{font-family:var(--display);font-size:21px;font-weight:500;color:#555260}.preview-label span{border-left:1px solid #c6c5cf;padding-left:10px}.workspace-note{position:fixed;left:12%;top:44%;max-width:300px;color:#93929e;pointer-events:none}.workspace-note p{font:32px/1.25 var(--display);letter-spacing:-.03em}.workspace-note small{display:block;font-size:13px;margin-top:13px;color:#a09faa}
+.widget{position:fixed;bottom:88px;right:26px;width:366px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 112px);display:flex;flex-direction:column;border:1px solid #ffffff25;border-radius:24px;background:linear-gradient(150deg,#302e40,#24242f 65%);box-shadow:0 18px 65px #21203038,0 3px 12px #21203015;overflow:hidden;isolation:isolate;animation:appear .3s ease-out;z-index:5}.widget::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 30% 0%,#b5a6da16,transparent 55%)}.top{display:flex;align-items:center;gap:9px;min-height:57px;padding:13px 18px;border-bottom:1px solid var(--line);flex:none}.brand{font-family:var(--display);font-size:21px;display:flex;align-items:center;gap:8px}.brand .i{color:var(--lav);width:21px;height:21px}.demo-tag{font-size:9px;border:1px solid var(--line-2);border-radius:5px;padding:1px 5px;color:var(--dim);letter-spacing:.04em}.grow{flex:1}.icon-btn{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;color:var(--soft)}.icon-btn:hover{background:var(--surface-3);color:var(--text)}main{overflow:auto;overscroll-behavior:contain;padding:22px;scrollbar-width:thin;scrollbar-color:var(--surface-3) transparent}.widget-footer{flex:none;display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--line);font-size:11px;color:var(--dim)}.text-link{color:var(--soft);font-size:11px}.text-link:hover{color:var(--text)}.trail{display:flex;align-items:center;gap:4px}.trail i{display:block;width:7px;height:7px;border-radius:50%;background:#77728c;box-shadow:0 0 6px #bab1da45;opacity:.4}.trail i.on{background:var(--glow);box-shadow:0 0 6px #f1d5a354;opacity:1}.trail-label{display:flex;align-items:center;gap:8px}
+.launcher{position:fixed;bottom:23px;right:26px;z-index:6;height:49px;padding:0 18px 0 13px;display:flex;align-items:center;gap:9px;border-radius:18px;background:#2b2938;color:var(--text);box-shadow:0 4px 20px #29233630;border:1px solid #ffffff20;font-weight:500;font-size:13px}.launcher:hover{background:#383447}.launcher .i{color:var(--lav);width:24px;height:24px}.launcher-dot{width:5px;height:5px;border-radius:50%;background:var(--glow);box-shadow:0 0 7px #f1d5a3;margin-left:3px}
+.home{text-align:center;display:flex;align-items:center;flex-direction:column;gap:12px}.home .lead{color:var(--soft);font-size:13px;max-width:27ch}.home .context{font:10px var(--mono);color:var(--dim);display:flex;align-items:center;gap:6px}.home .context i{width:4px;height:4px;border-radius:50%;background:var(--amber)}.fog-scene{position:relative;width:124px;height:72px;margin:0 auto 2px}.fog-scene .spark{position:absolute;width:9px;height:9px;left:58px;top:33px;border-radius:50%;background:var(--glow);box-shadow:0 0 0 10px #f1d5a30a,0 0 32px #f1d5a355}.fog-scene .wisp{position:absolute;width:90px;height:34px;top:17px;left:4px;background:radial-gradient(ellipse,#bcb2d98c,transparent 70%);filter:blur(5px);animation:mist 7s ease-in-out infinite alternate}.fog-scene .wisp:nth-child(3){top:32px;left:29px;animation-delay:-3s;opacity:.85}.fog-scene .wisp:nth-child(4){top:6px;left:31px;opacity:.5;animation-delay:-5s}.fog-scene.clear .wisp{animation:clear-mist 1.8s ease-out forwards}.fog-scene.bug .spark{background:var(--coral);box-shadow:0 0 28px #f0a29466}.home-actions{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:6px}.btn{display:inline-flex;justify-content:center;align-items:center;gap:8px;min-height:40px;padding:9px 15px;border:1px solid var(--line-2);border-radius:12px;font-size:13px;font-weight:600;background:var(--surface);color:var(--text)}.btn.primary{background:var(--glow);color:#3d3020;border-color:transparent}.btn.primary:hover{background:#f6dfb8}.btn.quiet{border-color:transparent;background:transparent;color:var(--soft);font-size:12px;min-height:32px;padding:5px 9px}.btn.quiet:hover{color:var(--text);background:#ffffff06}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.review,.disc,.past{display:flex;flex-direction:column;gap:15px}.rv-top{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--soft)}.rv-top .icon-btn{width:24px;height:24px}.rv-top .where{flex:1}.question{font-family:var(--ui);font-size:20px;line-height:1.4;font-weight:500;letter-spacing:-.025em}.mini-status{font-size:10px;color:var(--amber)}.closer-btn{display:flex;align-items:center;gap:6px;color:var(--lav);font-size:12px}.closer-btn[aria-expanded='true'] .i{transform:rotate(90deg)}.closer{display:flex;flex-direction:column;gap:10px;margin-top:10px}.evidence{font-size:11px;color:var(--soft)}.evidence b{color:var(--amber);font-weight:500}.snippet{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;overflow:hidden}.snip-h{padding:9px 10px;color:var(--dim);font:10px var(--mono);overflow-wrap:anywhere}.code{font:10px/1.8 var(--mono);overflow-x:auto;padding:6px 0}.rows{min-width:max-content}.ln{display:grid;grid-template-columns:2px 28px 12px auto;padding-right:12px}.ln .tx{white-space:pre}.no,.sg{color:#79758d}.ln.silent{background:var(--amber-bg)}.ln.silent .bar{background:var(--amber)}.ln.mine .bar{background:var(--lav)}.ln.del .tx{color:var(--dim);text-decoration:line-through}.hl-k{color:#c1afe7}.hl-s{color:#afd3bb}.hl-f{color:#a6bfdf}.hl-n{color:var(--amber)}.hl-c{color:var(--dim)}
+.answer{display:flex;flex-direction:column;gap:10px}.typebox{display:flex;flex-direction:column;gap:10px}.typebox textarea{resize:vertical;width:100%;min-height:87px;max-height:180px;background:#1e1e297a;border:1px solid var(--line-2);border-radius:12px;padding:12px;font-size:13px;line-height:1.55}.typebox textarea::placeholder{color:var(--dim)}.typebox .btn.primary{width:100%}.answer-tools{display:flex;align-items:center;justify-content:space-between;gap:8px}.answer-tools button{font-size:11px;color:var(--soft);display:flex;align-items:center;gap:5px}.answer-tools button:hover{color:var(--glow)}.note{font-size:10px;color:var(--dim);line-height:1.5}.skipbar{display:flex;justify-content:center;border-top:1px solid var(--line);padding-top:7px}.listen{display:flex;flex-direction:column;gap:10px;background:#ffffff04;border:1px solid var(--line);border-radius:12px;padding:14px}.said{font-size:12px;color:var(--soft)}.wave{display:flex;align-items:center;justify-content:center;gap:3px;height:28px}.wave i{width:3px;height:8px;background:var(--glow);border-radius:3px}.grading,.nice{font-size:12px;display:flex;align-items:center;gap:8px;color:var(--glow);padding:12px;border-radius:12px;background:var(--glow-bg)}.orb{width:7px;height:7px;border-radius:50%;background:var(--glow);animation:pulse 1.5s infinite}.disc{text-align:center;align-items:center;gap:12px}.disc .lead{font-size:13px;color:var(--soft)}.disc .actions{width:100%;display:flex;flex-direction:column;gap:5px}.kicker{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--glow)}.milestone{font-size:11px;display:flex;align-items:center;gap:5px;color:var(--glow)}.hintcard,.pushbar{font-size:12px;padding:11px;border-radius:11px;background:var(--glow-bg);color:var(--soft);text-align:left;width:100%}.hintcard{background:#b3a8dd0d}.pushbar{color:var(--amber)}.agentlog{text-align:left;width:100%;font:10px/1.8 var(--mono);color:var(--soft);padding:11px;background:var(--code-bg);border-radius:10px}.agentlog .ok{color:var(--glow)}.entry{display:flex;gap:9px;padding:11px 0;border-bottom:1px solid var(--line)}.entry>.i{color:var(--glow);margin-top:3px}.entry p{font-size:12px;color:var(--soft)}.entry .meta{font-size:10px;color:var(--dim);margin-top:4px}.past h1{font-size:24px}.past details summary{font-size:11px;color:var(--soft);cursor:pointer}.past q{display:block;font-size:12px;color:var(--dim);padding-top:8px}.toast{position:fixed;bottom:85px;right:26px;z-index:8;max-width:366px;width:calc(100vw - 32px);display:flex;align-items:flex-start;gap:9px;padding:13px 16px;border-radius:13px;border:1px solid var(--line-2);background:#343240;box-shadow:0 5px 25px #0002;font-size:12px;pointer-events:none}.reset-dialog{width:330px;max-width:calc(100vw - 32px);background:var(--surface);color:var(--text);border:1px solid var(--line-2);border-radius:18px;padding:22px}.reset-dialog::backdrop{background:#14131b60}.reset-dialog p{font-size:13px;color:var(--soft);margin:12px 0 18px}
+@keyframes appear{from{opacity:0;transform:translateY(8px) scale(.98)}}@keyframes mist{to{transform:translate(14px,-5px)}}@keyframes clear-mist{to{opacity:0;transform:translate(20px,-20px)}}@keyframes pulse{50%{opacity:.3}}
+@media(max-width:640px){.workspace-note{left:28px;top:27%;max-width:210px}.workspace-note p{font-size:26px}.preview-label{left:20px;top:20px}.widget{right:16px;bottom:80px;max-height:calc(100dvh - 98px)}.launcher{right:16px;bottom:16px}.toast{right:16px;bottom:80px}main{padding:20px}.widget-footer{padding:11px 16px}}
+/* A pocket-sized exploration game. Rewards follow demonstrated understanding. */
+.btn.primary{box-shadow:0 3px 0 #a78a5d,inset 0 1px 0 #fff5;transition:transform .12s,box-shadow .12s}
+.btn.primary:active{transform:translateY(3px);box-shadow:0 0 0 #a78a5d}
+.home{gap:10px}.home-actions{margin-top:9px}.game-scene{position:relative;width:100%;height:108px;overflow:hidden;border-radius:15px;background:linear-gradient(#292838,#333143);border:1px solid #ffffff09}
+.game-scene>svg{width:100%;height:100%;display:block}.scene-mist{position:absolute;inset:10px -20px 0 38%;background:radial-gradient(ellipse,#c4bbdf55,transparent 65%);filter:blur(7px);animation:mist 6s ease-in-out infinite alternate;pointer-events:none}.scene-mist.second{inset:30px 0 -15px 20%;opacity:.7;animation-delay:-3s}.game-scene.clear .scene-mist{animation:clear-mist 1.5s forwards}
+.explorer{display:block;width:48px;height:55px;overflow:visible}.guide-float{animation:guide-bob 3s ease-in-out infinite}.guide-eyes{transform-box:fill-box;transform-origin:center;animation:blink 6s infinite}.launcher .explorer{width:29px;height:34px}.quest-label{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:10px;color:var(--dim)}.quest-label b{font-weight:600;color:var(--lav)}.quest-label .reward{color:var(--glow);display:flex;align-items:center;gap:4px}.rank-mark{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--glow)}.rank-mark .level{font:9px var(--mono);border:1px solid var(--glow-line);padding:2px 5px;border-radius:5px;background:var(--glow-bg)}
+.encounter{display:flex;align-items:center;gap:10px;padding:9px 11px;background:#b3a8dd0b;border:1px solid #b3a8dd1a;border-radius:12px}.encounter .explorer{width:29px;height:33px;flex:none}.encounter p{font-size:11px;color:var(--soft)}.quest-steps{display:flex;gap:4px;margin-top:-5px}.quest-steps i{height:3px;flex:1;background:var(--surface-3);border-radius:3px}.quest-steps .done{background:var(--glow)}.quest-steps .active{background:var(--lav)}
+.reward-scene{position:relative;width:110px;height:80px;display:grid;place-items:center}.reward-scene .explorer{width:58px;height:66px}.reward-scene::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse,#f1d5a326,transparent 70%)}.reward-spark{position:absolute;left:50%;top:45%;width:5px;height:5px;pointer-events:none;background:var(--glow);border-radius:1px;animation:reward-pop 1s ease-out both;animation-delay:var(--delay)}.reward-spark:nth-child(odd){background:var(--lav)}.reward-scene.bug::before{background:radial-gradient(ellipse,#f0a29426,transparent 70%)}
+.unlock{display:flex;align-items:center;gap:10px;border:1px solid var(--glow-line);background:var(--glow-bg);padding:10px 12px;border-radius:12px;width:100%;text-align:left;animation:unlock-in .4s ease-out}.unlock>.i{width:24px;height:24px;color:var(--glow)}.unlock small{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}.unlock b{font-size:12px;color:var(--glow);font-weight:600}.badge-shelf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.badge{display:flex;flex-direction:column;align-items:center;gap:7px;padding:11px 5px;border-radius:13px;border:1px dashed var(--line-2);background:#ffffff03;text-align:center}.badge>.i{width:22px;height:22px;color:var(--dim)}.badge b{font-size:10px;color:var(--soft);font-weight:500}.badge small{font-size:9px;color:var(--dim)}.badge.earned{border-style:solid;border-color:var(--glow-line);background:var(--glow-bg)}.badge.earned>.i,.badge.earned b{color:var(--glow)}.collection-note{font-size:10px;color:var(--dim);margin-top:-5px}
+@keyframes guide-bob{50%{transform:translateY(-3px)}}@keyframes blink{0%,42%,46%,100%{transform:scaleY(1)}44%{transform:scaleY(.15)}}@keyframes reward-pop{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) rotate(130deg)}}@keyframes unlock-in{from{opacity:0;transform:translateY(5px) scale(.96)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}.btn.primary:active{transform:none}}
+
+</style>
+</head>
+<body>
+
+<div class="preview-label"><b>Viva</b><span>Popup preview</span></div>
+<div class="workspace-note" aria-hidden="true"><p>Your workspace,<br>uninterrupted.</p><small>A little clarity, just when you need it.</small></div>
+<aside class="widget" id="widget" aria-label="Viva code review">
+  <header class="top" id="top"></header>
+  <main id="main" tabindex="-1"></main>
+  <footer class="widget-footer" id="widget-footer"></footer>
+</aside>
+<button class="launcher" id="launcher" data-act="toggle-widget" aria-controls="widget" aria-expanded="true" aria-label="Minimise Viva"></button>
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog class="reset-dialog" id="reset-dialog" aria-labelledby="reset-title"><h2 id="reset-title">A fresh expedition?</h2><p>This resets your demo discoveries and brings back the fog. Your actual code is never changed.</p><div class="row"><button class="btn primary" data-act="confirm-reset">Reset demo</button><button class="btn quiet" data-act="cancel-reset">Keep exploring</button></div></dialog>
+
+<script>
+(() => {
+const P = {
+  mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>',
+  keyboard:'<rect width="20" height="16" x="2" y="4" rx="3"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/>',
+  compass:'<circle cx="12" cy="12" r="10"/><path d="m16.2 7.8-2.1 6.3-6.3 2.1 2.1-6.3Z"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  back:'<path d="m12 19-7-7 7-7M19 12H5"/>',
+  chev:'<path d="m9 18 6-6-6-6"/>',
+  send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  cloud:'<path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/>',
+  mist:'<path d="M4 8h12M2 12h18M6 16h12"/>',
+  bug:'<path d="m8 2 1.9 1.9M16 2l-1.9 1.9"/><path d="M9 7.1V6a3 3 0 1 1 6 0v1.1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9M6.5 13H3M21 13h-3.5M6 9 4 7M18 9l2-2M6 17l-2 2M18 17l2 2"/>',
+  pause:'<rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/>',
+  bulb:'<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2Z"/>',
+  eye:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>',
+  skip:'<path d="M5 4l10 8-10 8Z"/><path d="M19 5v14"/>',
+  star:'<path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  refresh:'<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+};
+const ic = (n, c='') => `<svg class="i ${c}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const RM = matchMedia('(prefers-reduced-motion: reduce)');
+const $ = s => document.querySelector(s);
+
+/* ================= sample data ================= */
+const REPO = 'pay-relay', BRANCH = 'feat/webhook-retries';
+const ISLANDS = [
+  {id:'payments', name:'Payments', path:'src/payments', x:500, y:300, r:96, status:'unexplored', review:'payments',
+   reason:'An AI agent added retries and quietly moved the duplicate-charge check. Your push is paused until someone explains it.'},
+  {id:'auth', name:'Authentication', path:'src/auth', x:232, y:160, r:70, status:'understood', reason:'You explained how revoked API keys are rejected, 3 days ago. Nothing has changed since.'},
+  {id:'api', name:'API', path:'src/api', x:250, y:445, r:76, status:'understood', reason:'You explained the payment routes 9 days ago. Nothing has changed since.'},
+  {id:'webhooks', name:'Webhooks', path:'src/webhooks', x:735, y:160, r:72, status:'refresh', review:'webhooks',
+   reason:'You explained this 41 days ago, and an agent has since widened how old a signed request can be.'},
+  {id:'ledger', name:'Ledger', path:'src/ledger', x:770, y:440, r:72, status:'understood', reason:'You explained double-entry posting 5 days ago. Nothing has changed since.'},
+  {id:'notify', name:'Notifications', path:'src/notify', x:515, y:540, r:58, status:'unexplored', review:'notify',
+   reason:'An agent moved receipt emails into a background queue this week. Nobody has looked at it yet.'},
+  {id:'config', name:'Config', path:'src/config', x:92, y:305, r:52, status:'refresh', review:'config',
+   reason:'An agent started caching config when the app boots. Your last explanation may no longer hold.'},
+  {id:'logging', name:'Logging', path:'src/logging', x:912, y:300, r:52, status:'understood', reason:'You explained card-number redaction 12 days ago. Nothing has changed since.'},
+];
+const ROADS = [['payments','auth'],['payments','api'],['payments','webhooks'],['payments','ledger'],['payments','notify'],['auth','config'],['api','config'],['webhooks','logging'],['ledger','logging'],['api','notify']];
+const NEXT_ORDER = ['payments','notify','webhooks','config'];
+const isl = id => ISLANDS.find(i => i.id === id);
+
+// code line: [lineNo|null, text, kind] kind: '' | 'add' | 'del' | 'silent' | 'silent-del' | 'mine'
+const REVIEWS = {
+  payments:{island:'payments', file:'src/payments/webhook.ts', push:true,
+    asked:'Add retries to the payment webhook.', agentDid:'Moved the duplicate-charge check so it runs after the card is charged.',
+    evidence:'Agent session, step 7: "Moving the duplicate check inside the retry closure so every attempt is checked." This wasn\'t in your request, and the agent didn\'t mention it in its reply.',
+    silentLabel:'Silent AI decision: the duplicate check now runs after the charge',
+    code:[
+      [30,'export async function handleWebhook(req: WebhookRequest) {',''],
+      [31,'  if (!verifySignature(req)) return { status: 401 };',''],
+      [32,'  const event = parseEvent(req.body);',''],
+      [33,'  const key = event.idempotencyKey;',''],
+      [null,'  if (await alreadyProcessed(key)) return { status: 200 };','silent-del'],
+      [34,'',''],
+      [35,'  return retryWithBackoff(async () => {','add'],
+      [36,'    const { customerId, amount } = event.data;',''],
+      [37,'    const opts = { timeoutMs: 5_000 };','add'],
+      [38,'',''],
+      [39,'    const charge = await chargeCard(customerId, amount, opts);','silent'],
+      [40,'',''],
+      [41,'    if (await alreadyProcessed(key)) {','silent'],
+      [42,'      return { status: 200, duplicate: true };','silent'],
+      [43,'    }','silent'],
+      [44,'    await markProcessed(key, charge.id);','silent'],
+      [45,'    return { status: 200, chargeId: charge.id };',''],
+      [46,'  });','add'],
+      [47,'}',''],
+    ],
+    questions:[
+      {q:'The payment succeeds, but the request times out. What happens when it retries?', focus:[37,44],
+       bugKw:/twice|double|two charges|charg\w* (it |the card |them )?again|second charge|both/i,
+       vague:'It just tries again, and the duplicate check catches it.',
+       strong:'It charges the card first, then times out before markProcessed runs. The retry charges again, and the check on line 41 only runs after that. So the customer is charged twice.',
+       hint:'Follow the second attempt line by line. Which runs first: the charge on line 39, or the check on line 41? And was the key saved after the first attempt?'},
+    ]},
+  paymentsFix:{island:'payments', file:'src/payments/webhook.ts', push:true, fix:true,
+    asked:'Fix the double charge you found: check for duplicates before charging.', agentDid:'Also started passing the idempotency key to the card processor.',
+    evidence:'Agent session, step 3: "The processor accepts an idempotency key. Passing ours means a retried charge returns the original." You didn\'t ask for this second safeguard.',
+    silentLabel:'Silent AI decision: the key is also sent to the card processor',
+    code:[
+      [30,'export async function handleWebhook(req: WebhookRequest) {',''],
+      [31,'  if (!verifySignature(req)) return { status: 401 };',''],
+      [32,'  const event = parseEvent(req.body);',''],
+      [33,'  const key = event.idempotencyKey;',''],
+      [34,'',''],
+      [35,'  // Claim the key before any money moves','mine'],
+      [36,'  const claimed = await claimKey(key);','mine'],
+      [37,'  if (!claimed) return { status: 200, duplicate: true };','mine'],
+      [38,'',''],
+      [39,'  return retryWithBackoff(async () => {',''],
+      [40,'    const { customerId, amount } = event.data;',''],
+      [null,'    const opts = { timeoutMs: 5_000 };','silent-del'],
+      [41,'    const opts = { timeoutMs: 5_000, idempotencyKey: key };','silent'],
+      [42,'    const charge = await chargeCard(customerId, amount, opts);',''],
+      [43,'    await markProcessed(key, charge.id);',''],
+      [44,'    return { status: 200, chargeId: charge.id };',''],
+      [45,'  });',''],
+      [46,'}',''],
+    ],
+    questions:[
+      {q:'Two copies of the same event arrive at the same moment. What stops both of them charging the card?', focus:[35,37],
+       kw:/claim|atomic|only one|first one|reserve|lock|one of them/i,
+       vague:'The check stops it.',
+       strong:'claimKey is atomic, so only one of them gets the key. The other returns as a duplicate before anything is charged.',
+       hint:'Look at line 36. What does claimKey do when a second request asks for a key that is already claimed?',
+       learned:'only one request can claim the key'},
+      {q:'The first charge succeeds but times out again. Why is the retry safe now?', focus:[41,42],
+       kw:/same key|idempotency|processor|original|already|first charge|won.?t charge/i,
+       vague:'Because it is fixed now.',
+       strong:'The retry sends the same idempotency key to the processor, so it returns the original charge instead of making a new one.',
+       hint:'Line 41 passes something new to chargeCard. What does the card processor do when it sees a key it has already used?',
+       learned:'the processor returns the original charge for a repeated key'},
+    ],
+    learned:'You explained why the key is claimed before any money moves, and why the processor\'s key makes a timed-out retry safe.'},
+  webhooks:{island:'webhooks', file:'src/webhooks/verify.ts',
+    asked:'Fix flaky signature failures from the payment provider.', agentDid:'Widened the allowed clock difference from 5 to 15 minutes.',
+    evidence:'Agent session, step 2: "Some failures are clock drift. Raising the tolerance to 15 minutes." The wider window wasn\'t discussed.',
+    silentLabel:'Silent AI decision: signed requests now stay valid for 15 minutes',
+    code:[
+      [12,'export function verifySignature(req: WebhookRequest): boolean {',''],
+      [13,'  const sig = req.headers["x-signature"];',''],
+      [14,'  const ts = Number(req.headers["x-timestamp"]);',''],
+      [null,'  const MAX_SKEW_MS = 5 * 60_000;','silent-del'],
+      [15,'  const MAX_SKEW_MS = 15 * 60_000;','silent'],
+      [16,'  if (Math.abs(Date.now() - ts) > MAX_SKEW_MS) return false;',''],
+      [17,'  const expected = hmac(SECRET, `${ts}.${req.rawBody}`);',''],
+      [18,'  return timingSafeEqual(sig, expected);',''],
+      [19,'}',''],
+    ],
+    questions:[
+      {q:'Someone captures a real, signed webhook request. What can they do with it now?', focus:[15,16],
+       kw:/replay|resend|send it again|again|reuse|duplicate|repeat/i,
+       vague:'Nothing, it is signed.',
+       strong:'They can replay it for up to 15 minutes and the signature still passes, so only the idempotency check stops it doing anything twice.',
+       hint:'The signature proves who sent it, not when. What does line 16 allow for a request that is 10 minutes old?'},
+    ],
+    learned:'You saw that a 15-minute window lets a captured request be replayed, and that idempotency is what keeps a replay harmless.'},
+  notify:{island:'notify', file:'src/notify/receipts.ts',
+    asked:'Make the payment endpoint faster.', agentDid:'Moved receipt emails off the request into a background queue.',
+    evidence:'Agent session, step 5: "Email sending is the slowest part. Queueing it." You asked for speed, not this specific change.',
+    silentLabel:'Silent AI decision: receipts are queued instead of sent straight away',
+    code:[
+      [8,'export async function onPaymentSucceeded(payment: Payment) {',''],
+      [null,'  await sendReceipt(payment.id);','silent-del'],
+      [9,'  await enqueue({ type: "receipt", paymentId: payment.id });','silent'],
+      [10,'  return { ok: true };',''],
+      [11,'}',''],
+      [12,'',''],
+      [13,'export async function drain(batchSize = 25) {','add'],
+      [14,'  const jobs = await queue.take(batchSize);','add'],
+      [15,'  for (const job of jobs) {','add'],
+      [16,'    try { await sendReceipt(job.paymentId); }','add'],
+      [17,'    catch { await queue.retryLater(job, { delayMs: 60_000 }); }','add'],
+      [18,'  }','add'],
+      [19,'}','add'],
+    ],
+    questions:[
+      {q:'The email provider is down for an hour. What does a customer see when they pay?', focus:[8,10],
+       kw:/succeed|goes through|works|fine|no error|queued|queue|later|late|delay/i,
+       vague:'An error, probably.',
+       strong:'The payment still goes through straight away. The receipt just waits in the queue and arrives late.',
+       hint:'Line 9 no longer sends the email. What does it do instead, and does the payment wait for it?'},
+      {q:'Once the provider is back, what happens to the receipts that piled up?', focus:[16,17],
+       kw:/retry|retried|sent|drain|minute|catch up|batch/i,
+       vague:'They disappear.',
+       strong:'Each failed job is retried a minute later, so drain catches up in batches of 25 once the provider recovers.',
+       hint:'Look at the catch on line 17. What happens to a job that failed?'},
+    ],
+    learned:'You explained that payments no longer wait for email, and how queued receipts catch up after an outage.'},
+  config:{island:'config', file:'src/config/load.ts',
+    asked:'Stop reading environment variables on every request.', agentDid:'Cached config for the life of the process.',
+    evidence:'Agent session, step 1: "Caching on first read." Rotating secrets wasn\'t discussed.',
+    silentLabel:'Silent AI decision: config is cached until the process restarts',
+    code:[
+      [3,'let cached: Config | null = null;','silent'],
+      [4,'',''],
+      [5,'export function loadConfig(): Config {',''],
+      [6,'  if (cached) return cached;','silent'],
+      [7,'  cached = {',''],
+      [8,'    stripeKey: required("STRIPE_KEY"),',''],
+      [9,'    webhookSecret: required("WEBHOOK_SECRET"),',''],
+      [10,'  };',''],
+      [11,'  return cached;',''],
+      [12,'}',''],
+    ],
+    questions:[
+      {q:'You rotate the webhook secret while the server is running. When does the app start using the new one?', focus:[3,6],
+       kw:/restart|reboot|redeploy|boot|next start|never|until/i,
+       vague:'Straight away.',
+       strong:'Not until the process restarts, because loadConfig keeps the first values it read.',
+       hint:'Line 6 returns early. Once cached is set, does loadConfig ever read the environment again?'},
+    ],
+    learned:'You explained that rotated secrets only take effect after a restart, because config is cached on first read.'},
+};
+
+/* ================= state ================= */
+const S = {
+  open:true, screen:'world', sel:null, fog:{}, review:null, disc:null, pay:'new', cleared:null,
+  history:[
+    {kind:'explored', island:'auth', when:'3 days ago', text:'Explained how revoked API keys are rejected before the merchant is attached.', quote:'It looks up the hashed key, and a revoked key fails before we ever touch the merchant.'},
+    {kind:'explored', island:'ledger', when:'5 days ago', text:'Explained why every debit and credit is written in one transaction.', quote:'Either both sides of the entry land or neither does.'},
+    {kind:'explored', island:'api', when:'9 days ago', text:'Explained why payment lookups read from our ledger, not the processor.'},
+    {kind:'explored', island:'logging', when:'12 days ago', text:'Explained how card fields are redacted before logs leave the app.'},
+    {kind:'explored', island:'webhooks', when:'41 days ago', text:'Explained signature checks. Needs a refresh since an agent changed them.'},
+  ],
+  badges:[],
+};
+const STORAGE_KEY = 'viva.expedition.v1';
+const BADGES = [
+  {id:'bug-spotter',name:'Bug spotter',icon:'bug',hint:'Find the hidden bug'},
+  {id:'first-light',name:'First light',icon:'bulb',hint:'Clear a new area'},
+  {id:'lightkeeper',name:'Lightkeeper',icon:'star',hint:'Light all 8 lanterns'},
+];
+const INITIAL = JSON.stringify({statuses:ISLANDS.map(i => [i.id,i.status]), pay:S.pay, history:S.history,badges:[]});
+function restoreProgress(value){
+  if (!value || !Array.isArray(value.statuses) || !Array.isArray(value.history)) return;
+  for (const item of value.statuses) {
+    if (!Array.isArray(item)) continue;
+    const [id,status] = item, island = isl(id);
+    if (island && ['understood','refresh','unexplored'].includes(status)) island.status = status;
+  }
+  if (['new','bug','fixed','done','skipped'].includes(value.pay)) S.pay = value.pay;
+  S.history = value.history.filter(h => h && isl(h.island) && ['explored','bug','skipped'].includes(h.kind) && typeof h.text === 'string').slice(0,100);
+  S.badges = [...new Set((Array.isArray(value.badges)?value.badges:[]).filter(id=>BADGES.some(b=>b.id===id)))];
+}
+try { restoreProgress(JSON.parse(localStorage.getItem(STORAGE_KEY))); } catch { /* Private browsing or stale demo data: start fresh. */ }
+function saveProgress(){
+  try { localStorage.setItem(STORAGE_KEY,JSON.stringify({statuses:ISLANDS.map(i => [i.id,i.status]),pay:S.pay,history:S.history,badges:S.badges})); }
+  catch { /* The demo remains usable when browser storage is unavailable. */ }
+}
+const fogTarget = i => i.status === 'understood' ? 0 : i.status === 'refresh' ? .5 : 1;
+ISLANDS.forEach(i => S.fog[i.id] = fogTarget(i));
+const explored = () => ISLANDS.filter(i => i.status === 'understood').length;
+function rank(){const n=explored();return n===8?{level:3,name:'Lightkeeper'}:n>=6?{level:2,name:'Pathfinder'}:{level:1,name:'Scout'};}
+function syncBadges(){
+  const unlocked = [];
+  const earned = [S.history.some(h=>h.kind==='bug'),ISLANDS.some(i=>i.review&&i.status==='understood'),explored()===8];
+  BADGES.forEach((badge,i)=>{if(earned[i]&&!S.badges.includes(badge.id)){S.badges.push(badge.id);unlocked.push(badge.id);}});
+  return unlocked;
+}
+let timers = [];
+const later = (fn, ms) => { const t = setTimeout(fn, RM.matches ? Math.min(ms, 80) : ms); timers.push(t); return t; };
+const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+function toast(html, icon='sun'){ const t = $('#toast'); t.innerHTML = `<div class="toast">${ic(icon)}<span>${html}</span></div>`; clearTimeout(toast.t); toast.t = setTimeout(() => t.innerHTML = '', 3800); }
+function hl(code){
+  const re = /(\/\/.*$)|("(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`)|\b(import|from|export|async|function|const|let|return|await|if|for|try|catch|null|new)\b|\b(\d[\d_]*)\b|([A-Za-z_]\w*)(?=\s*[(<])/g;
+  let out = '', last = 0, m;
+  while ((m = re.exec(code))) { out += esc(code.slice(last, m.index)); out += `<span class="hl-${m[1]?'c':m[2]?'s':m[3]?'k':m[4]?'n':'f'}">${esc(m[0])}</span>`; last = re.lastIndex; }
+  return out + esc(code.slice(last));
+}
+
+/* ================= compact popup ================= */
+function renderTop(){
+  $('#top').innerHTML = '<span class="brand">'+ic('mist')+'Viva</span><span class="demo-tag">DEMO</span><span class="grow"></span><button class="icon-btn" data-act="minimise" aria-label="Minimise Viva">'+ic('x')+'</button>';
+  const r = rank();
+  $('#widget-footer').innerHTML = '<span class="rank-mark"><span class="level">LV '+r.level+'</span>'+r.name+'</span><button class="text-link" data-act="past">Badges & discoveries · '+S.badges.length+'/3</button>';
+  $('#widget').hidden = !S.open;
+  $('#launcher').innerHTML = explorer()+'<span>Viva</span>'+(nextIsland()?'<span class="launcher-dot" aria-hidden="true"></span>':'');
+  $('#launcher').setAttribute('aria-expanded',String(S.open));
+  $('#launcher').setAttribute('aria-label',S.open?'Minimise Viva':'Open Viva');
+}
+function setOpen(open){
+  S.open = open;
+  renderTop();
+  if (open && document.getElementById('wave') && !waveRAF) waveRAF = requestAnimationFrame(wave);
+  if (open) $('#main').focus(); else $('#launcher').focus();
+}
+function nextIsland(){ return NEXT_ORDER.map(isl).find(i => i.status !== 'understood'); }
+function explorer(happy=false){
+  return `<svg class="explorer" viewBox="0 0 48 56" aria-hidden="true"><ellipse cx="22" cy="52" rx="15" ry="3" fill="#15141c" opacity=".35"/><g class="guide-float"><path d="M10 42L8 50H18L20 43M25 43L27 50H35L32 40" fill="#77718f"/><path d="M9 31Q4 39 6 44L15 40M31 31L40 34L38 38L28 38" fill="#b6a7da"/><path d="M22 3C8 8 7 18 8 30L4 45Q23 51 37 44L34 29C35 17 30 8 22 3Z" fill="#aaa0cb"/><path d="M22 3L20 42L5 45L8 29C6 16 14 7 22 3" fill="#8e83b5"/><path d="M12 23Q12 12 22 12Q32 13 32 24Q31 33 21 33Q12 32 12 23" fill="#363344"/><g class="guide-eyes">${happy?'<path d="M16 23Q18 19 20 23M25 23Q27 19 29 23" fill="none" stroke="#fff0cf" stroke-width="2" stroke-linecap="round"/>':'<ellipse cx="18" cy="23" rx="1.8" ry="2.3" fill="#fff0cf"/><ellipse cx="27" cy="23" rx="1.8" ry="2.3" fill="#fff0cf"/>'}</g><path d="M11 34Q23 40 33 33L30 38L25 39L24 46L19 44L21 38Q15 38 11 36" fill="#d6be8c"/><circle cx="40" cy="41" r="10" fill="#f1d5a3" opacity=".1"/><path d="M37 36V33Q40 29 43 33V36" stroke="#c9b383" fill="none" stroke-width="1.5"/><rect x="35" y="35" width="10" height="12" rx="2" fill="#a68c5f"/><rect x="37" y="37" width="6" height="7" rx="1" fill="#ffe7af"/><path d="M40 37V44" stroke="#c9a976" stroke-width="1"/></g></svg>`;
+}
+function fogScene(mode='fog'){
+  const ids=['auth','ledger','api','logging',...NEXT_ORDER], next=nextIsland();
+  const guideIndex=next?ids.indexOf(next.id):7;
+  const lamps=ids.map((id,k)=>{
+    const lit=isl(id).status==='understood',x=24+k*37,y=86+(k%2?-3:2);
+    return `<g transform="translate(${x},${y})"><circle r="${lit?12:8}" fill="${lit?'#f1d5a3':'#b3a8dd'}" opacity="${lit?.09:.04}"/><path d="M-3,-5V-8Q0,-12 3,-8V-5" stroke="${lit?'#d1b680':'#77718b'}" fill="none"/><rect x="-5" y="-5" width="10" height="12" rx="2" fill="${lit?'#b79c6b':'#514c65'}"/><rect x="-3" y="-3" width="6" height="7" rx="1" fill="${lit?'#ffe1a1':'#77718b'}"/>${!lit?'<path d="M-11,2H10M-8,5H12" stroke="#b3a8dd" stroke-opacity=".25" stroke-width="3" stroke-linecap="round"/>':''}</g>`;
+  }).join('');
+  return `<div class="game-scene ${mode}" role="img" aria-label="Your explorer’s trail: ${explored()} of 8 lanterns lit"><svg viewBox="0 0 310 108" aria-hidden="true"><path d="M0 71Q45 40 93 63T195 61T310 56V108H0Z" fill="#3b374c"/><path d="M0 85Q60 62 120 81T240 78T310 81V108H0Z" fill="#423c53"/><path d="M24 88Q74 72 135 85T283 83" stroke="#b3a8dd" stroke-opacity=".3" stroke-width="1.5" stroke-dasharray="2 5" fill="none"/><path d="M22 42L31 22L40 42H35L41 49H21L27 42ZM257 48L265 27L274 48H270L275 55H255L261 48Z" fill="#5d5574" opacity=".4"/><circle cx="251" cy="18" r="9" fill="#e1d7f0" opacity=".15"/>${lamps}<g transform="translate(${24+guideIndex*37-17},24) scale(.7)">${explorer(mode==='clear').replace('<svg class="explorer"','<svg width="48" height="56" class="explorer"')}</g></svg><i class="scene-mist"></i><i class="scene-mist second"></i></div>`;
+}
+function rewardScene(mode='clear'){
+  return `<div class="reward-scene ${mode}" aria-hidden="true">${explorer(mode==='clear')}${Array.from({length:10},(_,k)=>`<i class="reward-spark" style="--x:${Math.round(Math.cos(k*.628)*65)}px;--y:${Math.round(Math.sin(k*.628)*45)}px;--delay:${k*35}ms"></i>`).join('')}</div>`;
+}
+function badgeUnlock(ids=[]){
+  return ids.map(id=>{const b=BADGES.find(b=>b.id===id);return b?`<div class="unlock" role="status">${ic(b.icon)}<div><small>Badge unlocked</small><b>${b.name}</b></div></div>`:'';}).join('');
+}
+function badgeShelf(){
+  return `<div class="badge-shelf" aria-label="Collectible badges">${BADGES.map(b=>`<div class="badge ${S.badges.includes(b.id)?'earned':''}">${ic(b.icon)}<b>${b.name}</b><small>${S.badges.includes(b.id)?'Unlocked':b.hint}</small></div>`).join('')}</div>`;
+}
+function worldView(){
+  const nx = nextIsland();
+  return '<section class="home" aria-labelledby="wh"><div class="quest-label"><b>'+(nx?'NEXT QUEST':'TRAIL COMPLETE')+'</b><span>'+explored()+'/8 lanterns lit</span></div>'+fogScene(nx?'fog':'clear')+
+    '<h1 id="wh">'+(nx?'A little fog rolled in.':'Looking clear.')+'</h1>'+
+    '<p class="lead">'+(nx?nx.name+' is hiding in the mist. Complete a review to light its lantern.':'Every lantern is lit. Your explorer can rest until the next change.')+'</p>'+
+    '<span class="context">'+REPO+(nx?' <i></i> '+(nx.id==='payments'?'Push needs a review':'New change'):'')+'</span>'+
+    '<div class="home-actions">'+(nx?'<button class="btn primary" data-act="explore">'+ic('sun','sm')+' Clear the fog</button><button class="btn quiet" data-act="minimise">Later</button>':'<button class="btn primary" data-act="minimise">Back to work</button>')+'</div></section>';
+}
+
+
+/* ================= review ================= */
+function startReview(key){
+  clearTimers();
+  S.review = {key, qi:0, mode:'type', listening:false, said:'', draft:'', grading:false, closer:false, nice:false};
+  S.sel = null; go('review');
+}
+function snippetLines(R, focus){
+  const idx = R.code.map((l, k) => l[0] != null && l[0] >= focus[0]-2 && l[0] <= focus[1]+2 ? k : -1).filter(k => k >= 0);
+  let a = idx[0], b = idx[idx.length-1];
+  while (a > 0 && R.code[a-1][0] == null) a--;
+  return R.code.slice(a, b+1);
+}
+function codeRows(lines, focus){
+  return `<div class="code"><div class="rows">${lines.map(([n,t,k]) => {
+    const silent = k.startsWith('silent'), del = k.endsWith('del'), add = k==='add' || (silent && !del) || k==='mine';
+    const f = focus && n != null && n >= focus[0] && n <= focus[1];
+    return `<div class="ln ${silent?'silent':''} ${k==='mine'?'mine':''} ${del?'del':add?'add':''} ${f?'focus':''}"><span class="bar"></span><span class="no">${n??''}</span><span class="sg">${del?'−':add?'+':''}</span><span class="tx">${hl(t)||' '}</span></div>`;
+  }).join('')}</div></div>`;
+}
+function reviewView(){
+  const V = S.review, R = REVIEWS[V.key], I = isl(R.island), Q = R.questions[V.qi];
+  return `<section class="review" aria-labelledby="qh">
+    <div class="rv-top"><button class="icon-btn" data-act="to-world" aria-label="Back to Viva">${ic('back','sm')}</button><span class="where">${I.name} · ${V.qi+1} of ${R.questions.length}</span>${R.push?'<span class="mini-status">Demo push paused</span>':''}</div>
+    <div class="quest-steps" aria-hidden="true">${R.questions.map((_,k)=>`<i class="${k<V.qi?'done':k===V.qi?'active':''}"></i>`).join('')}</div>
+    ${V.nice?'<div class="nice" role="status">'+ic('check','sm')+' A little clearer. One more.</div>':''}
+    <h1 class="question" id="qh" tabindex="-1">${esc(Q.q)}</h1>
+    <div><button class="closer-btn" data-act="closer" aria-expanded="${V.closer}" aria-controls="closer">${ic('chev','sm')} Peek at the code</button>
+    ${V.closer?'<div class="closer" id="closer"><p class="evidence"><b>Silent change:</b> '+esc(R.agentDid)+'</p><div class="snippet"><div class="snip-h">'+R.file+'</div>'+codeRows(snippetLines(R,Q.focus),Q.focus)+'</div><p class="evidence">You asked: '+esc(R.asked)+'</p></div>':''}</div>
+    ${answerArea()}
+    <div class="skipbar"><button class="btn quiet" data-act="skip">${R.push?'Skip & allow demo push':'Skip for now'} · fog stays</button></div>
+  </section>`;
+}
+function answerArea(){
+  const V = S.review;
+  if (V.grading) return '<div class="grading" role="status"><span class="orb"></span>Checking the demo answer…</div>';
+  if (V.mode === 'voice') return `<div class="answer"><div class="listen"><div class="wave" id="wave" aria-hidden="true">${'<i></i>'.repeat(20)}</div><p class="said" id="said">${esc(V.said)||'Playing a sample transcript…'}</p><button class="btn primary" data-act="done-speaking">Use sample answer</button><button class="btn quiet" data-act="type">Type my answer instead</button></div><p class="note">Sample transcript only. Your microphone is off.</p></div>`;
+  return `<div class="answer"><div class="typebox"><label class="sr" for="ans">Your explanation</label><textarea id="ans" placeholder="Here’s what I think happens…">${esc(V.draft)}</textarea><div class="answer-tools"><button data-act="speak">${ic('mic','sm')} Voice demo</button><button data-act="fill" data-v="strong">Try a sample</button></div><button class="btn primary" data-act="submit">Check my answer ${ic('chev','sm')}</button></div><p class="note">Practice mode · Simple answer guide, not AI grading.</p></div>`;
+}
+
+
+let waveRAF = null;
+function wave(now){
+  waveRAF = null; const w = document.getElementById('wave'); if (!w || !S.open) return;
+  [...w.children].forEach((b, k) => { const v = RM.matches ? .5 : Math.abs(Math.sin(now/(130+k*4) + k*1.3) * Math.sin(now/420 + k*.5)); b.style.height = (6 + v*26).toFixed(1) + 'px'; });
+  if (!RM.matches) waveRAF = requestAnimationFrame(wave);
+}
+function speak(){
+  const V = S.review, Q = REVIEWS[V.key].questions[V.qi];
+  clearTimers(); V.mode = 'voice'; V.said = ''; render();
+  const words = (Q.strong).split(' '); let k = 0;
+  const tick = () => { if (S.review !== V || V.mode !== 'voice') return; V.said += (k?' ':'') + words[k++]; const el = document.getElementById('said'); if (el) el.textContent = V.said; if (k < words.length) later(tick, 110 + Math.random()*80); };
+  later(tick, 500);
+}
+function submit(text){
+  const V = S.review; if (!V || V.grading) return;
+  if (!text.trim()) { toast('Write an answer or play the sample first.', 'info'); return; }
+  clearTimers(); V.grading = true; V.mode = null; render();
+  later(() => grade(text.trim()), 1200);
+}
+// Deliberately limited prototype rubric. No claim of semantic or AI grading.
+function matchesDemoRubric(key, qi, text){
+  const t = text.toLowerCase().replace(/[’‘]/g,"'");
+  if (t.trim().split(/\s+/).length < 6) return false;
+  const rules = {
+    payments:[[/twice|double|two charges|charges? (?:the card )?again|second charge/, /after|before|first|late|order/]],
+    paymentsFix:[[/atomic|only one|first one|reserve|lock/, /key|claim|duplicate/], [/same key|same idempotency|idempotency key/, /processor|original|returns?|new charge/]],
+    webhooks:[[/replay|resend|send it again|reuse/, /15|fifteen/, /idempotency|duplicate/]],
+    notify:[[/payment.*(?:through|succeed|works)|pay.*(?:succeed|works)/, /receipt|email/, /queue|later|late|delay|wait/], [/retry|retried/, /minute|batch|25|drain/]],
+    config:[[/restart|reboot|redeploy|next start/, /cache|first|keeps/]],
+  };
+  if (key === 'payments' && /(?:not|never|won't|doesn't|cannot|can't) (?:be )?(?:double[- ]?charged|charged twice|charge (?:the card )?(?:twice|again))/.test(t)) return false;
+  return (rules[key]?.[qi] || []).every(rule => rule.test(t));
+}
+function grade(text){
+  const V = S.review, R = REVIEWS[V.key], Q = R.questions[V.qi], I = isl(R.island);
+  V.grading = false;
+  if (Q.bugKw) {
+    if (matchesDemoRubric(V.key,V.qi,text)) { S.pay = 'bug'; S.history.unshift({kind:'bug', island:I.id, when:'Just now', text:'Spotted a double-charge risk: the duplicate check ran after the charge.', quote:text}); return discover({kind:'bug', key:V.key, quote:text}); }
+    return discover({kind:'weak', key:V.key, hint:Q.hint});
+  }
+  if (matchesDemoRubric(V.key,V.qi,text)) {
+    if (V.qi < R.questions.length - 1) { V.qi++; V.draft = ''; V.said = ''; V.mode = 'type'; V.nice = true; V.closer = false; render(); $('#qh')?.focus(); later(() => { if (S.review === V) { V.nice = false; render(); } }, 2200); return; }
+    const before = explored(), previousRank = rank();
+    I.status = 'understood';
+    if (V.key === 'paymentsFix') S.pay = 'done';
+    S.history.unshift({kind:'explored', island:I.id, when:'Just now', text:R.learned.replace(/^You /,'You ').replace(/\.$/,'') + '.', quote:text});
+    const ms = [];
+    if (explored() >= 5 && before < 5) ms.push('More than half your world is clear');
+    if (explored() === 8) ms.push('Every island explored');
+    if (V.key === 'paymentsFix') ms.push('Bug caught and fixed before it shipped');
+    return discover({kind:'understood', key:V.key, milestone:ms[0], quote:text,newArea:explored()>before,levelUp:rank().level>previousRank.level});
+  }
+  discover({kind:'weak', key:V.key, hint:Q.hint});
+}
+function discover(d){ d.newBadges=syncBadges(); S.disc = d; clearTimers(); go('discovery'); }
+
+/* ================= discovery ================= */
+function discoveryView(){
+  const D = S.disc, R = REVIEWS[D.key], I = isl(R.island);
+  if (D.kind === 'understood') return `<section class="disc" aria-labelledby="dh">${rewardScene()}<span class="kicker">${D.levelUp?'Level up · '+rank().name:'Quest complete'}</span><h1 id="dh">${I.name}, uncovered.</h1><p class="lead">${esc(R.learned)}</p><span class="milestone">${ic('bulb','sm')} ${D.newArea?'+1 lantern lit':'Lantern still glowing'} · ${explored()} of 8</span>${badgeUnlock(D.newBadges)}${R.push?'<p class="note">Demo push allowed. No real code was pushed.</p>':''}<div class="actions"><button class="btn primary" data-act="finish">Back to work</button><button class="btn quiet" data-act="back-map">Next quest</button></div></section>`;
+  if (D.kind === 'weak') return `<section class="disc" aria-labelledby="dh">${explorer()}<h1 id="dh">A little fog remains.</h1><p class="lead">Free retry. Your explorer found a clue.</p><div class="hintcard">${esc(D.hint)}</div><div class="actions"><button class="btn primary" data-act="retry">Try again</button><button class="btn quiet" data-act="skip">Skip for now · fog stays</button></div></section>`;
+  const A = D.agent;
+  return `<section class="disc" aria-labelledby="dh">${A?explorer():rewardScene('bug')}<span class="kicker">Hidden bug discovered</span><h1 id="dh">You spotted a double charge.</h1>${badgeUnlock(A?[]:D.newBadges)}<p class="lead">The retry charges the card before checking for a duplicate. You caught it before it shipped.</p><div class="pushbar">Demo push paused. Let’s fix it before clearing the fog.</div>
+  ${A?'<div class="agentlog" role="status">'+A.lines.map(l=>'<div class="'+(l.ok?'ok':'')+'">'+(l.ok?'✓ ':'› ')+esc(l.t)+'</div>').join('')+'</div>':''}
+  <div class="actions">${!A?'<button class="btn primary" data-act="send-agent">Fix with demo agent</button>':A.done?'<button class="btn primary" data-act="review-fix">Review the fix</button>':'<button class="btn primary" disabled>Demo agent is fixing it…</button>'}<button class="btn quiet" data-act="skip">Skip & allow demo push</button></div><p class="note">Agent and Git actions are simulated.</p></section>`;
+}
+
+
+function sendAgent(){
+  const D = S.disc; if (D.agent) return; D.agent = {lines:[], done:false}; render();
+  const steps = ['Reading your finding','Claiming the key before the card is charged','Also passing the key to the card processor','Adding a test: charge succeeds, times out, retry charges once',{t:'Fix ready in b7e21f0. Tests pass.', ok:true}];
+  steps.forEach((s, k) => later(() => { D.agent.lines.push(typeof s === 'string' ? {t:s} : s); if (k === steps.length-1) { D.agent.done = true; S.pay = 'fixed'; saveProgress(); } if (S.screen === 'discovery') render(); }, 700 + k*800));
+}
+
+/* ================= past discoveries ================= */
+function pastView(){
+  return `<section class="past"><div class="rv-top"><button class="icon-btn" data-act="to-world" aria-label="Back to Viva">${ic('back','sm')}</button><span>Your little wins</span></div><h1 tabindex="-1">Your collection</h1>${badgeShelf()}<p class="collection-note">Scout → Pathfinder at 6 lanterns → Lightkeeper at 8.</p><div>${S.history.map(h=>'<article class="entry">'+ic(h.kind==='bug'?'bug':h.kind==='skipped'?'cloud':'sun','sm')+'<div><p>'+esc(h.text)+'</p><div class="meta">'+isl(h.island).name+' · '+esc(h.when||'Previous visit')+'</div>'+(h.quote?'<details><summary>Your explanation</summary><q>'+esc(h.quote)+'</q></details>':'')+'</div></article>').join('')}</div><button class="btn quiet" data-act="reset">Reset demo progress</button></section>`;
+}
+
+
+/* ================= routing ================= */
+function go(screen){ if (location.hash !== '#'+screen) location.hash = screen; else { S.screen = screen; render(); } }
+function render(){
+  syncBadges();
+  saveProgress();
+  renderTop();
+  const m = $('#main');
+  if (S.screen === 'review' && !S.review) S.screen = 'world';
+  if (S.screen === 'discovery' && !S.disc) S.screen = 'world';
+  m.innerHTML = S.screen === 'review' ? reviewView() : S.screen === 'discovery' ? discoveryView() : S.screen === 'past' ? pastView() : worldView();
+  if (S.open && document.getElementById('wave') && !waveRAF) waveRAF = requestAnimationFrame(wave);
+  const ta = document.getElementById('ans'); if (S.open && ta && S.review?.mode === 'type' && document.activeElement !== ta) ta.focus();
+}
+addEventListener('hashchange', () => {
+  const h = location.hash.slice(1);
+  S.screen = ['world','review','discovery','past'].includes(h) ? h : 'world';
+  clearTimers();
+  if (S.disc?.agent && !S.disc.agent.done && S.screen !== 'discovery') S.disc.agent = null;
+  if (S.review) S.review.grading = false;
+  render(); scrollTo(0,0);
+  const f = $('#main h1'); if (S.open && f) { f.setAttribute('tabindex','-1'); f.focus({preventScroll:true}); }
+});
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const a = t.dataset.act, V = S.review;
+  switch (a) {
+    case 'explore': { const n = nextIsland(); if (n) beginIsland(n.id); break; }
+    case 'start': beginIsland(t.dataset.id); break;
+    case 'to-world': go('world'); break;
+    case 'minimise': setOpen(false); break;
+    case 'toggle-widget': setOpen(!S.open); break;
+    case 'past': go('past'); break;
+    case 'finish': S.disc = null; S.review = null; go('world'); setOpen(false); break;
+    case 'reset': $('#reset-dialog').showModal(); break;
+    case 'cancel-reset': $('#reset-dialog').close(); break;
+    case 'confirm-reset': {
+      clearTimers(); restoreProgress(JSON.parse(INITIAL));
+      S.review = null; S.disc = null; S.sel = null; S.cleared = null;
+      ISLANDS.forEach(i => S.fog[i.id] = fogTarget(i));
+      $('#reset-dialog').close(); go('world'); break;
+    }
+    case 'closer': V.closer = !V.closer; render(); break;
+    case 'speak': speak(); break;
+    case 'type': clearTimers(); V.mode = 'type'; render(); break;
+    case 'done-speaking': submit(V.said); break;
+    case 'fill': V.draft = REVIEWS[V.key].questions[V.qi][t.dataset.v]; render(); break;
+    case 'submit': submit(document.getElementById('ans').value); break;
+    case 'skip': skip(); break;
+    case 'retry': S.review.draft = ''; S.review.said = ''; S.review.mode = 'type'; go('review'); break;
+    case 'send-agent': sendAgent(); break;
+    case 'review-fix': startReview('paymentsFix'); break;
+    case 'back-map': { const id = REVIEWS[S.disc.key].island; S.cleared = id; S.disc = null; S.review = null; go('world'); toast(`${isl(id).name} explored · ${explored()} of 8 areas clear`); setTimeout(() => { S.cleared = null; }, 2600); break; }
+  }
+});
+document.addEventListener('input', e => { if (e.target.id === 'ans') S.review.draft = e.target.value; });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#reset-dialog').open) setOpen(false);
+  if (e.target.id === 'ans' && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submit(e.target.value); }
+});
+function beginIsland(id){
+  if (id === 'payments') {
+    if (S.pay === 'bug') { if (!S.disc || S.disc.kind !== 'bug') S.disc = {kind:'bug', key:'payments'}; S.review = null; S.sel = null; return go('discovery'); }
+    return startReview(S.pay === 'fixed' ? 'paymentsFix' : 'payments');
+  }
+  startReview(isl(id).review);
+}
+function skip(){
+  const key = S.review?.key || S.disc?.key; const R = REVIEWS[key], I = isl(R.island);
+  clearTimers();
+  if (R.push && S.pay !== 'done') S.pay = 'skipped';
+  S.history.unshift({kind:'skipped', island:I.id, when:'Just now', text: R.push ? 'Skipped the review. The push went ahead and the fog stayed.' : 'Skipped for now. The fog stayed.'});
+  S.review = null; S.disc = null; go('world');
+  toast(R.push ? `Skipped. The fog stays on ${I.name}, and your push went ahead.` : `Skipped for now. The fog stays on ${I.name}.`, 'cloud');
+}
+
+const h = location.hash.slice(1);
+S.screen = ['world','past'].includes(h) ? h : 'world';
+render();
+})();
+</script>
+</body>
+</html>
